@@ -1,0 +1,12 @@
+How to create venv with specific pyhton version
+    On file explorer:
+        %appdata%
+        search for python.exe in Local
+
+    On Terminal: (Ctrl + ")
+    C:\Users\emanu\AppData\Local\Programs\Python\Python310\python.exe -m venv .venv
+
+
+
+Shooter
+    https://www.youtube.com/playlist?list=PLjcN1EyupaQm20hlUE11y9y8EY2aXLpnv
