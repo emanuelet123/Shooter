@@ -215,6 +215,7 @@ class Soldier(pygame.sprite.Sprite):
 		self.rect.center = (x, y)
 		self.width = self.image.get_width()
 		self.height = self.image.get_height()
+		self.mask = pygame.mask.from_surface(self.image)
 	# -------------------------------------------------------------------------------------------------------------
 	def move(self, moving_left, moving_right):
 		# Reset movement variables
@@ -266,15 +267,18 @@ class Soldier(pygame.sprite.Sprite):
 					self.in_air = False
 					dy = tile[1].top - self.rect.bottom
 
-
-		# Check for collision with water
+		# Check for collision between player and water
 		if pygame.sprite.spritecollide(self, water_group, False):
-			self.health = 0
+			# Check for pixel collision
+			if pygame.sprite.spritecollide(self, water_group, False, pygame.sprite.collide_mask):
+				self.health = 0
 
-		# Check for collision with exit
+		# Check for collision between player and exit
 		level_complete = False
 		if pygame.sprite.spritecollide(self, exit_group, False):
-			level_complete = True
+			# Check for pixel collision
+			if pygame.sprite.spritecollide(self, exit_group, False, pygame.sprite.collide_mask):
+				level_complete = True
 
 		# Check if fallen off the map
 		if self.rect.bottom > SCREEN_HEIGHT:
@@ -302,7 +306,7 @@ class Soldier(pygame.sprite.Sprite):
 	def update(self):
 		self.update_animation()
 		self.check_alive()
-		# Update cooldown
+		# Update shoot_cooldown
 		if self.shoot_cooldown > 0:
 			self.shoot_cooldown -= 1
 	# -------------------------------------------------------------------------------------------------------------
@@ -324,7 +328,7 @@ class Soldier(pygame.sprite.Sprite):
 			# Check if the ai in near the player
 			if self.vision.colliderect(player.rect):
 				# Stop running and face the player
-				self.update_action(0)#0: idle
+				self.update_action(0) # 0 -> Idle
 				# Shoot
 				self.shoot()
 			else:
@@ -335,7 +339,7 @@ class Soldier(pygame.sprite.Sprite):
 						ai_moving_right = False
 					ai_moving_left = not ai_moving_right
 					self.move(ai_moving_left, ai_moving_right)
-					self.update_action(1) # 1 -> run
+					self.update_action(1) # 1 -> Run
 					self.move_counter += 1
 					# Update ai vision as the enemy moves
 					self.vision.center = (self.rect.centerx + 75 * self.direction, self.rect.centery)
@@ -347,7 +351,7 @@ class Soldier(pygame.sprite.Sprite):
 					self.idling_counter -= 1
 					if self.idling_counter <= 0:
 						self.idling = False
-
+	
 		# Scroll
 		self.rect.x += screen_scroll
 	# -------------------------------------------------------------------------------------------------------------
@@ -517,7 +521,7 @@ class Bullet(pygame.sprite.Sprite):
 	# -------------------------------------------------------------------------------------------------------------
 	def __init__(self, x, y, direction):
 		pygame.sprite.Sprite.__init__(self)
-		self.speed = 10
+		self.speed = 15
 		self.image = bullet_img
 		self.rect = self.image.get_rect()
 		self.rect.center = (x, y)
@@ -534,16 +538,22 @@ class Bullet(pygame.sprite.Sprite):
 			if tile[1].colliderect(self.rect):
 				self.kill()
 
-		# Check collision with characters
+		# Check collision between bullets and player
 		if pygame.sprite.spritecollide(player, bullet_group, False):
-			if player.alive:
-				player.health -= 5
-				self.kill()
-		for enemy in enemy_group:
-			if pygame.sprite.spritecollide(enemy, bullet_group, False):
-				if enemy.alive:
-					enemy.health -= 25
+			# Check for pixel collision
+			if pygame.sprite.spritecollide(self, bullet_group, False, pygame.sprite.collide_mask):
+				if player.alive:
+					player.health -= 5
 					self.kill()
+
+		for enemy in enemy_group:
+			# Check collision between bullets and enemies
+			if pygame.sprite.spritecollide(enemy, bullet_group, False):
+				# Check for pixel collision
+				if pygame.sprite.spritecollide(self, bullet_group, False, pygame.sprite.collide_mask):
+					if enemy.alive:
+						enemy.health -= 25
+						self.kill()
 ###################################################################################################################
 class Grenade(pygame.sprite.Sprite):
 	# -------------------------------------------------------------------------------------------------------------
@@ -581,7 +591,6 @@ class Grenade(pygame.sprite.Sprite):
 				elif self.vel_y >= 0:
 					self.vel_y = 0
 					dy = tile[1].top - self.rect.bottom	
-
 
 		# Update grenade position
 		self.rect.x += dx + screen_scroll

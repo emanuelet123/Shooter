@@ -173,10 +173,16 @@ while run:
 	if pos[0] < SCREEN_WIDTH and pos[1] < SCREEN_HEIGHT:
 		# Update tile value
 		if pygame.mouse.get_pressed()[0] == 1:
-			if world_data[y][x] != current_tile:
-				world_data[y][x] = current_tile
+			try: # Avoid error when clicking outside limits
+				if world_data[y][x] != current_tile:
+					world_data[y][x] = current_tile
+			except:
+				pass
 		if pygame.mouse.get_pressed()[2] == 1:
-			world_data[y][x] = -1
+			try: # Avoid error when clicking outside limits
+				world_data[y][x] = -1
+			except:
+				pass
 	# -------------------------------------------------------------------------------------------------------------
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:

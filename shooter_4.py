@@ -41,10 +41,10 @@ def draw_bg():
 ###################################################################################################################
 class Soldier(pygame.sprite.Sprite):
 	# -------------------------------------------------------------------------------------------------------------
-	def __init__(self, char_type, x, y, scale, speed, ammo):
+	def __init__(self, char_color, x, y, scale, speed, ammo):
 		pygame.sprite.Sprite.__init__(self)
 		self.alive = True
-		self.char_type = char_type
+		self.char_color = char_color
 		self.speed = speed
 		self.ammo = ammo
 		self.start_ammo = ammo
@@ -67,9 +67,9 @@ class Soldier(pygame.sprite.Sprite):
 			# Reset temporary list of images
 			temp_list = []
 			# Count number of files in the folder
-			num_of_frames = len(os.listdir(f'img/{self.char_type}/{animation}'))
+			num_of_frames = len(os.listdir(f'img/characters/{self.char_color}/{animation}'))
 			for i in range(num_of_frames):
-				img = pygame.image.load(f'img/{self.char_type}/{animation}/{i}.png').convert_alpha()
+				img = pygame.image.load(f'img/characters/{self.char_color}/{animation}/{i}.png').convert_alpha()
 				img = pygame.transform.scale_by(img, scale)
 				temp_list.append(img)
 			self.animation_list.append(temp_list)
@@ -195,8 +195,8 @@ class Bullet(pygame.sprite.Sprite):
 bullet_group = pygame.sprite.Group()
 
 # Create player and enemy
-player = Soldier('player', 200, 200, 3, 5, 20)
-enemy = Soldier('enemy', 400, 200, 3, 5, 20)
+player = Soldier('green', 200, 200, 3, 5, 20)
+enemy = Soldier('red', 400, 200, 3, 5, 20)
 ###################################################################################################################
 run = True
 while run:
