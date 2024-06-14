@@ -1,6 +1,7 @@
 # Add player colors
 # Now the game doesn't have to load a fixed number of columns csv file. Can load any level size 
 # Perfect pixel collision
+# Changed '# Create world' place
 ###################################################################################################################
 import pygame
 from pygame import mixer
@@ -112,6 +113,8 @@ GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 PINK = (235, 65, 54)
 
+player_color = ''
+
 # Define font
 font = pygame.font.SysFont('Futura', 30)
 ###################################################################################################################
@@ -196,6 +199,10 @@ class Soldier(pygame.sprite.Sprite):
 		self.vision = pygame.Rect(0, 0, TILE_SIZE * 4, 20)
 		self.idling = False
 		self.idling_counter = 0
+		# Mouse click variables
+		self.mouse_action = False
+		self.clicked = False
+		self.char_selected = False
 		
 		# Load all images for the players
 		animation_types = ['idle', 'run', 'jump', 'death']
@@ -387,9 +394,23 @@ class Soldier(pygame.sprite.Sprite):
 			self.update_action(3)
 	# -------------------------------------------------------------------------------------------------------------
 	def draw(self):
+		# Get mouse position
+		pos = pygame.mouse.get_pos()
+
+		# Check mouseover and clicked conditions
+		if self.rect.collidepoint(pos):
+			if pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
+				self.mouse_action = True
+				self.clicked = True
+				self.char_selected = True
+
+		if pygame.mouse.get_pressed()[0] == 0:
+			self.clicked = False
+
 		screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 		# pygame.draw.rect(screen, RED, self.rect, 1)
 		# pygame.draw.rect(screen, WHITE, self.vision, 1)
+		return self.mouse_action
 ###################################################################################################################
 class World():
 	# -------------------------------------------------------------------------------------------------------------
@@ -416,7 +437,7 @@ class World():
 						decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
 						decoration_group.add(decoration)
 					elif tile == 15: # Create player
-						player = Soldier('yellow', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5, 100)
+						player = Soldier(player_color, x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5, 100)
 						health_bar = HealthBar(10, 10, player.health, player.health)
 					elif tile == 16: # Create enemies
 						enemy = Soldier('red', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 100)
@@ -693,10 +714,19 @@ class ScreenFade():
 intro_fade = ScreenFade(1, BLACK, 8)
 death_fade = ScreenFade(2, PINK, 10)
 ###################################################################################################################
-# Create buttons
-start_button = button.Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 1)
-exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 50, exit_img, 1)
+# Create general buttons
+start_button = button.Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 25, start_img, 1)
+exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 150, exit_img, 1)
 restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, restart_img, 2)
+
+# Create players buttons
+player_color_buttons_dict = {}
+x_increment = 0
+for player_color in os.listdir('img/characters/'):
+	if player_color != "red":
+		player_color_button = Soldier(player_color, SCREEN_WIDTH // 5 + x_increment, SCREEN_HEIGHT // 2 - 225, 5, 0, 0, 0, 0)
+		player_color_buttons_dict[player_color] = player_color_button
+		x_increment += SCREEN_WIDTH // 5
 ###################################################################################################################
 # Create sprite groups
 enemy_group = pygame.sprite.Group()
@@ -708,11 +738,6 @@ decoration_group = pygame.sprite.Group()
 water_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
 ###################################################################################################################
-# Create world
-world_data = create_empty_tile_list()
-
-world, player, health_bar = load_level_and_create_world()
-###################################################################################################################
 run = True
 while run:
 	# -------------------------------------------------------------------------------------------------------------
@@ -723,10 +748,21 @@ while run:
 		screen.fill(BG)
 		# Add buttons
 
+		### Fix, it can still select many
+		for color, player_btn in player_color_buttons_dict.items():
+			if player_btn.draw():
+				pygame.draw.rect(screen, BLACK, player_btn.rect, 5)
+				player_color = color
+
 		# Draw start button and check if it was clicked
 		if start_button.draw(screen):
+			# Break current if
 			start_game = True
 			start_intro = True
+
+			# Create world
+			world_data = create_empty_tile_list()
+			world, player, health_bar = load_level_and_create_world()
 
 		# Draw exit button and check if it was clicked
 		if exit_button.draw(screen):
