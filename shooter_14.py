@@ -724,7 +724,7 @@ player_color_buttons_dict = {}
 x_increment = 0
 for player_color in os.listdir('img/characters/'):
 	if player_color != "red":
-		player_color_button = Soldier(player_color, SCREEN_WIDTH // 5 + x_increment, SCREEN_HEIGHT // 2 - 225, 5, 0, 0, 0, 0)
+		player_color_button = Soldier(player_color, SCREEN_WIDTH // 5 + x_increment, SCREEN_HEIGHT // 2 - 225, 5, 0, 0, 0, 100)
 		player_color_buttons_dict[player_color] = player_color_button
 		x_increment += SCREEN_WIDTH // 5
 ###################################################################################################################
@@ -750,6 +750,7 @@ while run:
 
 		### Fix, it can still select many
 		for color, player_btn in player_color_buttons_dict.items():
+			player_btn.update()
 			if player_btn.draw():
 				pygame.draw.rect(screen, BLACK, player_btn.rect, 5)
 				player_color = color
