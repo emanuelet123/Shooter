@@ -1,8 +1,4 @@
-# Add player colors selector
-# Now the game doesn't have to load a fixed number of columns csv file. Can load any level size 
-# Perfect pixel collision
-# Changed '# Create world' place
-# Fixed TILE_SIZE of every component
+# Screen scroll y axis
 ###################################################################################################################
 import pygame
 from pygame import mixer
@@ -35,7 +31,8 @@ ROWS = 16
 COLS = 0 # Get by get_number_of_cols_of_level() | default 150
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 21
-screen_scroll = 0
+screen_scroll_x = 0
+screen_scroll_y = 0
 bg_scroll = 0
 level = 1
 start_game = False
@@ -224,7 +221,8 @@ class Soldier(pygame.sprite.Sprite):
 	# -------------------------------------------------------------------------------------------------------------
 	def move(self, moving_left, moving_right):
 		# Reset movement variables
-		screen_scroll = 0
+		screen_scroll_x = 0
+		screen_scroll_y = 0
 		dx = 0
 		dy = 0
 
@@ -286,8 +284,9 @@ class Soldier(pygame.sprite.Sprite):
 				level_complete = True
 
 		# Check if fallen off the map
-		if self.rect.bottom > SCREEN_HEIGHT:
-			self.health = 0
+		if self.char_color != 'red':
+			if self.rect.bottom > SCREEN_HEIGHT:
+				self.health = 0
 
 
 		# Check if going off the edges of the screen
@@ -307,9 +306,16 @@ class Soldier(pygame.sprite.Sprite):
 				# Move player
 				self.rect.x -= dx
 				# Move screen
-				screen_scroll = -dx
+				screen_scroll_x = -dx
+			
+			if self.rect.top > SCREEN_HEIGHT - SCROLL_THRESH // 4 or self.rect.bottom < SCROLL_THRESH // 4:
+				# Screen has to scroll in the opposite way of player, while player stays stationary
+				# Move player
+				self.rect.y -= dy
+				# Move screen
+				screen_scroll_y = -dy
 
-		return screen_scroll, level_complete
+		return screen_scroll_x, screen_scroll_y, level_complete
 	# -------------------------------------------------------------------------------------------------------------
 	def update(self):
 		self.update_animation()
@@ -361,7 +367,8 @@ class Soldier(pygame.sprite.Sprite):
 						self.idling = False
 	
 		# Scroll
-		self.rect.x += screen_scroll
+		self.rect.x += screen_scroll_x
+		self.rect.y += screen_scroll_y
 	# -------------------------------------------------------------------------------------------------------------
 	def update_animation(self):
 		# Update animation
@@ -459,7 +466,8 @@ class World():
 	# -------------------------------------------------------------------------------------------------------------
 	def draw(self):
 		for tile in self.obstacle_list:
-			tile[1][0] += screen_scroll
+			tile[1][0] += screen_scroll_x
+			tile[1][1] += screen_scroll_y
 			screen.blit(tile[0], tile[1])
 ###################################################################################################################
 class Decoration(pygame.sprite.Sprite):
@@ -472,7 +480,8 @@ class Decoration(pygame.sprite.Sprite):
 		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 	# -------------------------------------------------------------------------------------------------------------
 	def update(self):
-		self.rect.x += screen_scroll
+		self.rect.x += screen_scroll_x
+		self.rect.y += screen_scroll_y
 ###################################################################################################################
 class Water(pygame.sprite.Sprite):
 	# -------------------------------------------------------------------------------------------------------------
@@ -484,7 +493,8 @@ class Water(pygame.sprite.Sprite):
 		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 	# -------------------------------------------------------------------------------------------------------------
 	def update(self):
-		self.rect.x += screen_scroll
+		self.rect.x += screen_scroll_x
+		self.rect.y += screen_scroll_y
 ###################################################################################################################
 class Exit(pygame.sprite.Sprite):
 	# -------------------------------------------------------------------------------------------------------------
@@ -496,7 +506,8 @@ class Exit(pygame.sprite.Sprite):
 		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
 	# -------------------------------------------------------------------------------------------------------------
 	def update(self):
-		self.rect.x += screen_scroll
+		self.rect.x += screen_scroll_x
+		self.rect.y += screen_scroll_y
 ###################################################################################################################
 class ItemBox(pygame.sprite.Sprite):
 	# -------------------------------------------------------------------------------------------------------------
@@ -510,7 +521,8 @@ class ItemBox(pygame.sprite.Sprite):
 	# -------------------------------------------------------------------------------------------------------------
 	def update(self):
 		# Scroll
-		self.rect.x += screen_scroll
+		self.rect.x += screen_scroll_x
+		self.rect.y += screen_scroll_y
 		# Check if the player has picked up the box
 		if pygame.sprite.collide_rect(self, player):
 			# Check what kind of box it was
@@ -555,7 +567,7 @@ class Bullet(pygame.sprite.Sprite):
 	# -------------------------------------------------------------------------------------------------------------
 	def update(self):
 		# Move bullet
-		self.rect.x += (self.direction * self.speed) + screen_scroll
+		self.rect.x += (self.direction * self.speed) + screen_scroll_x
 		# Check if bullet has gone off screen
 		if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
 			self.kill()
@@ -620,8 +632,8 @@ class Grenade(pygame.sprite.Sprite):
 					dy = tile[1].top - self.rect.bottom	
 
 		# Update grenade position
-		self.rect.x += dx + screen_scroll
-		self.rect.y += dy
+		self.rect.x += dx + screen_scroll_x
+		self.rect.y += dy + screen_scroll_y
 
 		# Countdown timer
 		self.timer -= 1
@@ -675,7 +687,8 @@ class Explosion(pygame.sprite.Sprite):
 	# -------------------------------------------------------------------------------------------------------------
 	def update(self):
 		# Scroll
-		self.rect.x += screen_scroll
+		self.rect.x += screen_scroll_x
+		self.rect.y += screen_scroll_y
 
 		EXPLOSION_SPEED = 4
 		# Update explosion amimation
@@ -731,7 +744,7 @@ player_color_buttons_dict = {}
 x_increment = 0
 for player_color in os.listdir('img/characters/'):
 	if player_color != "red":
-		player_color_button = Soldier(player_color, SCREEN_WIDTH // 5 + x_increment, SCREEN_HEIGHT // 2 - 225, TILE_SIZE * 4, 0, 0, 0, 100)
+		player_color_button = Soldier(player_color, SCREEN_WIDTH // 5 + x_increment, SCREEN_HEIGHT // 2 - 225, 4*TILE_SIZE, 0, 0, 0, 100)
 		player_color_buttons_dict[player_color] = player_color_button
 		x_increment += SCREEN_WIDTH // 5
 ###################################################################################################################
@@ -848,8 +861,8 @@ while run:
 				player.update_action(1) # 1 -> run
 			else:
 				player.update_action(0)#0: idle
-			screen_scroll, level_complete = player.move(moving_left, moving_right)
-			bg_scroll -= screen_scroll
+			screen_scroll_x, screen_scroll_y, level_complete = player.move(moving_left, moving_right)
+			bg_scroll -= screen_scroll_x
 			# Check if player has completed the level
 			if level_complete:
 				start_intro = True
@@ -866,7 +879,8 @@ while run:
 					world, player, health_bar = load_level_and_create_world()
 		else:
 			# Stop any scrolling
-			screen_scroll = 0
+			screen_scroll_x = 0
+			screen_scroll_y = 0
 
 			# Call fade effect 2 and check if it's completed
 			if death_fade.fade():
