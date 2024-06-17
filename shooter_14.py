@@ -564,7 +564,7 @@ class Bullet(pygame.sprite.Sprite):
 			if tile[1].colliderect(self.rect):
 				self.kill()
 
-		# Check collision between bullets and player
+		# Check for collision between bullets and player
 		if pygame.sprite.spritecollide(player, bullet_group, False):
 			# Check for pixel collision
 			if pygame.sprite.spritecollide(self, bullet_group, False, pygame.sprite.collide_mask):
@@ -573,7 +573,7 @@ class Bullet(pygame.sprite.Sprite):
 					self.kill()
 
 		for enemy in enemy_group:
-			# Check collision between bullets and enemies
+			# Check for collision between bullets and enemies
 			if pygame.sprite.spritecollide(enemy, bullet_group, False):
 				# Check for pixel collision
 				if pygame.sprite.spritecollide(self, bullet_group, False, pygame.sprite.collide_mask):
@@ -589,7 +589,7 @@ class Grenade(pygame.sprite.Sprite):
 		self.vel_y = -11
 		self.speed = 7
 		self.image = grenade_img
-		self.image = pygame.transform.scale(self.image, (TILE_SIZE//3, TILE_SIZE//3))
+		self.image = pygame.transform.scale(self.image, (TILE_SIZE//4, TILE_SIZE//4))
 		self.rect = self.image.get_rect()
 		self.rect.center = (x, y)
 		self.width = self.image.get_width()
@@ -665,7 +665,7 @@ class Explosion(pygame.sprite.Sprite):
 		self.images = []
 		for num in range(1, 6):
 			img = pygame.image.load(f'img/explosion/exp{num}.png').convert_alpha()
-			img = pygame.transform.scale(img, (TILE_SIZE//2, TILE_SIZE//2))
+			img = pygame.transform.scale(img, (TILE_SIZE//1.5, TILE_SIZE//1.5))
 			self.images.append(img)
 		self.frame_index = 0
 		self.image = self.images[self.frame_index]
